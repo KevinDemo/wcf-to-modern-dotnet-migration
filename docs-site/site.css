@@ -1,0 +1,26 @@
+.block { padding: var(--s-16) var(--gutter); border-bottom: 1px solid var(--line); }
+.block > h2 { margin-bottom: var(--s-4); font-size: var(--t-title); line-height: 1.2; letter-spacing: -.02em; }
+.lead-note { margin-bottom: var(--s-4); }
+.tally .pass { color: var(--accent); }
+
+.picker { display: block; max-width: 28rem; color: var(--ink-2); font-size: var(--t-label); }
+.picker select { margin-top: var(--s-1); }
+.golden-status { margin-top: var(--s-3); max-width: none; color: var(--ink-2); }
+
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-6); margin-top: var(--s-4); }
+.pair h3 { margin-bottom: var(--s-2); font-size: var(--t-small); }
+.pair pre { max-height: 28rem; }
+
+.diff-block + .diff-block { margin-top: var(--s-12); }
+.diff-block h3 { font-size: var(--t-lead); }
+.diff-block .hint { margin-top: var(--s-1); }
+.diff-paths { margin: var(--s-3) 0; max-width: none; color: var(--ink-2); line-height: 1.6; }
+.diff { max-height: 34rem; padding-inline: 0; }
+.diff span { display: inline-block; min-width: 100%; padding-inline: var(--s-4); white-space: pre; }
+.diff .same { color: var(--ink-3); }
+.diff .del { color: var(--ink-2); background: var(--surface-raised); text-decoration: line-through; text-decoration-color: var(--meter); }
+.diff .add { color: var(--ink); background: var(--segment); }
+
+@media (max-width: 64rem) {
+  .pair { grid-template-columns: minmax(0, 1fr); }
+}

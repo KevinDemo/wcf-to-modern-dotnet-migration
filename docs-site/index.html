@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WCF migration results - Harbour Freight Couriers (fictional)</title>
+<meta name="description" content="Test results, recorded SOAP traffic and code diffs from a WCF to ASP.NET Core migration.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f6f4">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0b0c">
+<script>
+(function () {
+  var root = document.documentElement;
+  root.classList.add("js");
+  try {
+    var saved = localStorage.getItem("theme");
+    if (saved === "light" || saved === "dark") root.dataset.theme = saved;
+  } catch (e) {}
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400..700&family=Geist+Mono:wght@400..600&display=swap">
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap topbar-row">
+    <a class="mark" href="https://kevindemo.github.io/" target="_blank" rel="noopener"><span class="mark-box" aria-hidden="true">KC</span>Kevin Chen</a>
+    <span class="product">WCF to modern .NET migration</span>
+    <nav aria-label="Links">
+      
+      <a href="https://github.com/KevinDemo/wcf-to-modern-dotnet-migration" target="_blank" rel="noopener">Source on GitHub</a>
+    </nav>
+    <fieldset class="theme">
+      <legend class="sr">Theme</legend>
+      <label><input type="radio" name="theme" value="system" checked><span>System</span></label>
+      <label><input type="radio" name="theme" value="light"><span>Light</span></label>
+      <label><input type="radio" name="theme" value="dark"><span>Dark</span></label>
+    </fieldset>
+  </div>
+</header>
+<div class="banner-band"><p class="wrap banner" role="note">Static demo running in your browser. The real .NET service is in the repo.</p></div>
+<div class="wrap sheet">
+
+<section class="intro">
+  <h1>WCF to modern .NET, without breaking a single client</h1>
+  <p>A .NET Framework 4.8 WCF service moved to ASP.NET Core on .NET 10. The real compiled legacy client was pointed at the new host by changing one address in its config file, and its output is identical, line for line. Generated from the repo's README results, golden files and source.</p>
+</section>
+<section class="tally" aria-label="Latest test run">
+  <div><strong>27</strong><span>Tests</span></div>
+  <div><strong class="pass">27</strong><span>Passed</span></div>
+  <div><strong>0</strong><span>Failed</span></div>
+  <div><strong>0</strong><span>Skipped</span></div>
+  <div><strong>10</strong><span>Recorded SOAP exchanges</span></div>
+</section>
+<section class="block">
+  <h2>What is tested</h2>
+  <div class="table-wrap"><table>
+  <thead><tr><th>What is tested</th><th>How</th><th class="num">Tests</th></tr></thead>
+  <tbody><tr><td>Raw SOAP compatibility</td><td>Requests captured from the real net48 service are replayed against CoreWCF, and the response XML is compared with what the old service sent, including faults and nulls</td><td class="num">10</td></tr><tr><td>WSDL compatibility</td><td>Operations, SOAP actions, faults and schema types compared with the legacy WSDL, and the classic <code class="mono">?wsdl</code> address still answers</td><td class="num">2</td></tr><tr><td>The real legacy client</td><td>The compiled net48 exe runs against CoreWCF with only the address changed, and its transcript must match</td><td class="num">1</td></tr><tr><td>A System.ServiceModel client</td><td>Typed calls and typed faults against the new endpoint</td><td class="num">3</td></tr><tr><td>REST and OpenAPI</td><td>Status codes, problem details, tracking, the OpenAPI document</td><td class="num">7</td></tr><tr><td>One shared layer</td><td>Booked by SOAP and read by REST, then the reverse</td><td class="num">1</td></tr><tr><td>Guards on the golden files</td><td>The files exist, cover every operation and hold the expected legacy values</td><td class="num">3</td></tr></tbody>
+</table></div>
+</section>
+<section class="block">
+  <h2>The legacy client, unchanged</h2>
+  <p class="hint lead-note">The transcript from the compiled net48 client. A test runs the same exe against the new host and requires this output.</p>
+  <pre>Book: HF-100004 charge=28.65 AUD
+Get HF-100004: account=AC2001 Z03-&gt;Z08 Express 3.2kg items=2 charge=28.65 status=Booked booked=(just now) kind=Utc ref=PO-1234
+Get HF-100001: account=AC1001 Z01-&gt;Z01 Standard 2.0kg items=1 charge=12.70 status=Delivered booked=2025-03-03T08:15:00.0000000Z kind=Utc ref=PO-7781
+Get HF-100002: account=AC1002 Z02-&gt;Z07 Express 11.5kg items=3 charge=47.85 status=Despatched booked=2025-03-04T09:30:00.0000000Z kind=Utc ref=(none)
+Get HF-999999: null
+Track HF-100001: Booked at 2025-03-03T08:15:00.0000000Z in Z01
+Track HF-100001: Despatched at 2025-03-03T09:00:00.0000000Z in Z01
+Track HF-100001: PickedUp at 2025-03-03T09:45:00.0000000Z in Z01
+Track HF-100001: Delivered at 2025-03-03T10:30:00.0000000Z in Z01
+Track HF-999999: fault number=HF-999999 reason=Consignment not found.
+Invalid booking: fault field=WeightKg problem=Weight must be above 0 and at most 500 kg. reason=Weight must be above 0 and at most 500 kg.</pre>
+</section>
+<section class="block">
+  <h2>Recorded SOAP traffic</h2>
+  <p class="hint lead-note">Captured from the real net48 service. Each request is replayed against CoreWCF and its response compared with what the old service sent, including faults and nulls.</p>
+  <label class="picker">Exchange <select id="golden-pick"></select></label>
+  <p class="mono golden-status">HTTP status from the legacy service: <span id="golden-status"></span></p>
+  <div class="pair">
+    <div><h3>Request</h3><pre id="golden-request"></pre></div>
+    <div><h3>Legacy response, the contract to match</h3><pre id="golden-response"></pre></div>
+  </div>
+</section>
+<section class="block">
+  <h2>What was kept, and why</h2>
+  <div class="table-wrap"><table>
+  <thead><tr><th>Kept in SOAP</th><th>Why</th></tr></thead>
+  <tbody><tr><td>The <code class="mono">RefrenceNo</code> field name, typo included</td><td>Clients generated code from it. Renaming it would silently send them nulls. REST uses <code class="mono">reference</code>.</td></tr><tr><td><code class="mono">GetConsignment</code> returns null for an unknown number, while <code class="mono">TrackConsignment</code> raises a typed fault</td><td>Inconsistent, but clients have code paths written for each. REST returns a plain 404 for both.</td></tr><tr><td>Charging per started half kilo</td><td>Existing invoices depend on it. A migration is the wrong moment to change a business rule.</td></tr><tr><td>Fault shapes, validation order and messages</td><td>Clients may show or parse them.</td></tr><tr><td>Namespace, SOAP actions and <code class="mono">basicHttpBinding</code></td><td>They are the contract.</td></tr></tbody>
+</table></div>
+</section>
+<section class="block">
+  <h2>The code, before and after</h2>
+  <div class="diff-block">
+    <h3>The data contract</h3>
+    <p class="hint">The wire contract is copied across untouched, typo included. Differences are the namespaces and the runtime's attributes.</p>
+    <p class="mono diff-paths">- legacy/Harbour.Legacy.Service/Contracts.cs<br>+ modern/src/Harbour.Consignments.Web/Soap/Contracts.cs<br>78 lines the same, 24 removed, 23 added, ignoring indentation</p>
+    <pre class="diff"><span class="add">+ // The frozen SOAP contract. Names, namespaces and even the &quot;RefrenceNo&quot; typo must not change, because</span>
+<span class="add">+ // clients we cannot see depend on them. The golden tests fail if anything here drifts from the legacy service.</span>
+<span class="del">- using System;</span>
+<span class="same">  using System.Runtime.Serialization;</span>
+<span class="add">+ using CoreWCF;</span>
+<span class="add">+ </span>
+<span class="add">+ namespace Harbour.Consignments.Web.Soap;</span>
+<span class="del">- using System.ServiceModel;</span>
+<span class="same">  </span>
+<span class="del">- namespace Harbour.Legacy.Service</span>
+<span class="del">- {</span>
+<span class="same">  internal static class Ns</span>
+<span class="same">  {</span>
+<span class="same">      public const string Value = &quot;http://harbourfreight.example/consignments/2014/06&quot;;</span>
+<span class="same">  }</span>
+<span class="same">  </span>
+<span class="same">  [ServiceContract(Namespace = Ns.Value)]</span>
+<span class="same">  public interface IConsignmentService</span>
+<span class="same">  {</span>
+<span class="same">      [OperationContract]</span>
+<span class="same">      [FaultContract(typeof(ValidationFault))]</span>
+<span class="same">      BookingResult BookConsignment(BookingRequest request);</span>
+<span class="same">  </span>
+<span class="same">      /// &lt;summary&gt;Returns null for an unknown number. Clients depend on that, so it never faults.&lt;/summary&gt;</span>
+<span class="same">      [OperationContract]</span>
+<span class="add">+     ConsignmentDetail? GetConsignment(string consignmentNumber);</span>
+<span class="del">-         ConsignmentDetail GetConsignment(string consignmentNumber);</span>
+<span class="same">  </span>
+<span class="same">      [OperationContract]</span>
+<span class="same">      [FaultContract(typeof(ConsignmentNotFoundFault))]</span>
+<span class="same">      TrackingEvent[] TrackConsignment(string consignmentNumber);</span>
+<span class="same">  }</span>
+<span class="same">  </span>
+<span class="same">  [DataContract(Namespace = Ns.Value)]</span>
+<span class="same">  public enum ServiceLevel</span>
+<span class="same">  {</span>
+<span class="same">      [EnumMember] Standard,</span>
+<span class="same">      [EnumMember] Express,</span>
+<span class="add">+     [EnumMember] Overnight,</span>
+<span class="del">-         [EnumMember] Overnight</span>
+<span class="same">  }</span>
+<span class="same">  </span>
+<span class="same">  [DataContract(Namespace = Ns.Value)]</span>
+<span class="same">  public enum ConsignmentStatus</span>
+<span class="same">  {</span>
+<span class="same">      [EnumMember] Booked,</span>
+<span class="same">      [EnumMember] Despatched,</span>
+<span class="same">      [EnumMember] PickedUp,</span>
+<span class="add">+     [EnumMember] Delivered,</span>
+<span class="del">-         [EnumMember] Delivered</span>
+<span class="same">  }</span>
+<span class="same">  </span>
+<span class="same">  [DataContract(Namespace = Ns.Value)]</span>
+<span class="same">  public class BookingRequest</span>
+<span class="same">  {</span>
+<span class="add">+     [DataMember] public string? CustomerAccount { get; set; }</span>
+<span class="add">+     [DataMember] public string? PickupZone { get; set; }</span>
+<span class="add">+     [DataMember] public string? DeliveryZone { get; set; }</span>
+<span class="del">-         [DataMember] public string CustomerAccount { get; set; }</span>
+<span class="del">-         [DataMember] public string PickupZone { get; set; }</span>
+<span class="del">-         [DataMember] public string DeliveryZone { get; set; }</span>
+<span class="same">      [DataMember] public ServiceLevel ServiceLevel { get; set; }</span>
+<span class="same">      [DataMember] public decimal WeightKg { get; set; }</span>
+<span class="same">      [DataMember] public int Items { get; set; }</span>
+<span class="add">+     [DataMember(Name = &quot;RefrenceNo&quot;)] public string? Reference { get; set; }</span>
+<span class="del">-         // The typo went live in 2014. Renaming it would break every client, so it stays on the wire.</span>
+<span class="del">-         [DataMember(Name = &quot;RefrenceNo&quot;)] public string Reference { get; set; }</span>
+<span class="same">  }</span>
+<span class="same">  </span>
+<span class="same">  [DataContract(Namespace = Ns.Value)]</span>
+<span class="same">  public class BookingResult</span>
+<span class="same">  {</span>
+<span class="add">+     [DataMember] public string? ConsignmentNumber { get; set; }</span>
+<span class="del">-         [DataMember] public string ConsignmentNumber { get; set; }</span>
+<span class="same">      [DataMember] public decimal Charge { get; set; }</span>
+<span class="add">+     [DataMember] public string? Currency { get; set; }</span>
+<span class="del">-         [DataMember] public string Currency { get; set; }</span>
+<span class="same">  }</span>
+<span class="same">  </span>
+<span class="same">  [DataContract(Namespace = Ns.Value)]</span>
+<span class="same">  public class ConsignmentDetail</span>
+<span class="same">  {</span>
+<span class="add">+     [DataMember] public string? ConsignmentNumber { get; set; }</span>
+<span class="add">+     [DataMember] public string? CustomerAccount { get; set; }</span>
+<span class="add">+     [DataMember] public string? PickupZone { get; set; }</span>
+<span class="add">+     [DataMember] public string? DeliveryZone { get; set; }</span>
+<span class="del">-         [DataMember] public string ConsignmentNumber { get; set; }</span>
+<span class="del">-         [DataMember] public string CustomerAccount { get; set; }</span>
+<span class="del">-         [DataMember] public string PickupZone { get; set; }</span>
+<span class="del">-         [DataMember] public string DeliveryZone { get; set; }</span>
+<span class="same">      [DataMember] public ServiceLevel ServiceLevel { get; set; }</span>
+<span class="same">      [DataMember] public decimal WeightKg { get; set; }</span>
+<span class="same">      [DataMember] public int Items { get; set; }</span>
+<span class="same">      [DataMember] public decimal Charge { get; set; }</span>
+<span class="same">      [DataMember] public ConsignmentStatus Status { get; set; }</span>
+<span class="same">      [DataMember] public DateTime BookedUtc { get; set; }</span>
+<span class="add">+     [DataMember(Name = &quot;RefrenceNo&quot;)] public string? Reference { get; set; }</span>
+<span class="del">-         [DataMember(Name = &quot;RefrenceNo&quot;)] public string Reference { get; set; }</span>
+<span class="same">  }</span>
+<span class="same">  </span>
+<span class="same">  [DataContract(Namespace = Ns.Value)]</span>
+<span class="same">  public class TrackingEvent</span>
+<span class="same">  {</span>
+<span class="same">      [DataMember] public ConsignmentStatus Status { get; set; }</span>
+<span class="same">      [DataMember] public DateTime OccurredUtc { get; set; }</span>
+<span class="add">+     [DataMember] public string? Location { get; set; }</span>
+<span class="del">-         [DataMember] public string Location { get; set; }</span>
+<span class="same">  }</span>
+<span class="same">  </span>
+<span class="same">  [DataContract(Namespace = Ns.Value)]</span>
+<span class="same">  public class ValidationFault</span>
+<span class="same">  {</span>
+<span class="add">+     [DataMember] public string? Field { get; set; }</span>
+<span class="add">+     [DataMember] public string? Problem { get; set; }</span>
+<span class="del">-         [DataMember] public string Field { get; set; }</span>
+<span class="del">-         [DataMember] public string Problem { get; set; }</span>
+<span class="same">  }</span>
+<span class="same">  </span>
+<span class="same">  [DataContract(Namespace = Ns.Value)]</span>
+<span class="same">  public class ConsignmentNotFoundFault</span>
+<span class="same">  {</span>
+<span class="add">+     [DataMember] public string? ConsignmentNumber { get; set; }</span>
+<span class="del">-         [DataMember] public string ConsignmentNumber { get; set; }</span>
+<span class="same">  }</span>
+<span class="del">- }</span></pre>
+  </div>
+  <div class="diff-block">
+    <h3>The service class</h3>
+    <p class="hint">Rules and storage moved out of the WCF class into a plain application layer. What remains is a thin adapter.</p>
+    <p class="mono diff-paths">- legacy/Harbour.Legacy.Service/ConsignmentService.cs<br>+ modern/src/Harbour.Consignments.Web/Soap/ConsignmentSoapService.cs<br>21 lines the same, 109 removed, 38 added, ignoring indentation</p>
+    <pre class="diff"><span class="add">+ using CoreWCF;</span>
+<span class="add">+ using Harbour.Consignments.Application;</span>
+<span class="add">+ using App = Harbour.Consignments.Application;</span>
+<span class="add">+ </span>
+<span class="add">+ namespace Harbour.Consignments.Web.Soap;</span>
+<span class="del">- using System;</span>
+<span class="del">- using System.Collections.Generic;</span>
+<span class="del">- using System.Linq;</span>
+<span class="del">- using System.ServiceModel;</span>
+<span class="same">  </span>
+<span class="add">+ /// &lt;summary&gt;Translates between the frozen SOAP contract and the application layer. No business rules here.&lt;/summary&gt;</span>
+<span class="add">+ [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]</span>
+<span class="add">+ public sealed class ConsignmentSoapService(ConsignmentBookingService service) : IConsignmentService</span>
+<span class="del">- namespace Harbour.Legacy.Service</span>
+<span class="same">  {</span>
+<span class="add">+     public BookingResult BookConsignment(BookingRequest? request)</span>
+<span class="del">-     // Typical of the era on purpose: validation, pricing and storage all live in the service class,</span>
+<span class="del">-     // so none of it can be reused or tested without hosting WCF.</span>
+<span class="del">-     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]</span>
+<span class="del">-     public class ConsignmentService : IConsignmentService</span>
+<span class="same">      {</span>
+<span class="add">+         if (request is null) throw Invalid(&quot;request&quot;, &quot;A booking request is required.&quot;);</span>
+<span class="add">+         try</span>
+<span class="del">-         private static readonly object Sync = new object();</span>
+<span class="del">-         private static readonly Dictionary&lt;string, ConsignmentDetail&gt; Consignments = new Dictionary&lt;string, ConsignmentDetail&gt;();</span>
+<span class="del">-         private static readonly Dictionary&lt;string, List&lt;TrackingEvent&gt;&gt; Events = new Dictionary&lt;string, List&lt;TrackingEvent&gt;&gt;();</span>
+<span class="del">-         private static int _nextNumber = 100001;</span>
+<span class="del">- </span>
+<span class="del">-         static ConsignmentService()</span>
+<span class="same">          {</span>
+<span class="add">+             var booking = service.Book(new BookingCommand(</span>
+<span class="add">+                 request.CustomerAccount, request.PickupZone, request.DeliveryZone,</span>
+<span class="add">+                 (App.ServiceLevel)request.ServiceLevel, request.WeightKg, request.Items, request.Reference));</span>
+<span class="add">+             return new BookingResult { ConsignmentNumber = booking.ConsignmentNumber, Charge = booking.Charge, Currency = booking.Currency };</span>
+<span class="del">-             Seed(&quot;AC1001&quot;, &quot;Z01&quot;, &quot;Z01&quot;, ServiceLevel.Standard, 2.0m, 1, 12.70m, ConsignmentStatus.Delivered, new DateTime(2025, 3, 3, 8, 15, 0, DateTimeKind.Utc), &quot;PO-7781&quot;);</span>
+<span class="del">-             Seed(&quot;AC1002&quot;, &quot;Z02&quot;, &quot;Z07&quot;, ServiceLevel.Express, 11.5m, 3, 47.85m, ConsignmentStatus.Despatched, new DateTime(2025, 3, 4, 9, 30, 0, DateTimeKind.Utc), null);</span>
+<span class="del">-             Seed(&quot;AC1003&quot;, &quot;Z05&quot;, &quot;Z09&quot;, ServiceLevel.Overnight, 0.5m, 1, 28.60m, ConsignmentStatus.Booked, new DateTime(2025, 3, 5, 16, 45, 0, DateTimeKind.Utc), &quot;PO-9920&quot;);</span>
+<span class="same">          }</span>
+<span class="add">+         catch (BookingValidationException ex)</span>
+<span class="del">- </span>
+<span class="del">-         private static void Seed(string account, string pickup, string delivery, ServiceLevel level, decimal weight, int items, decimal charge, ConsignmentStatus status, DateTime booked, string reference)</span>
+<span class="same">          {</span>
+<span class="add">+             throw Invalid(ex.Field, ex.Message);</span>
+<span class="del">-             var number = &quot;HF-&quot; + _nextNumber++;</span>
+<span class="del">-             Consignments[number] = new ConsignmentDetail</span>
+<span class="del">-             {</span>
+<span class="del">-                 ConsignmentNumber = number,</span>
+<span class="del">-                 CustomerAccount = account,</span>
+<span class="del">-                 PickupZone = pickup,</span>
+<span class="del">-                 DeliveryZone = delivery,</span>
+<span class="del">-                 ServiceLevel = level,</span>
+<span class="del">-                 WeightKg = weight,</span>
+<span class="del">-                 Items = items,</span>
+<span class="del">-                 Charge = charge,</span>
+<span class="del">-                 Status = status,</span>
+<span class="del">-                 BookedUtc = booked,</span>
+<span class="del">-                 Reference = reference</span>
+<span class="del">-             };</span>
+<span class="del">- </span>
+<span class="del">-             var history = new List&lt;TrackingEvent&gt;();</span>
+<span class="del">-             for (var step = ConsignmentStatus.Booked; step &lt;= status; step++)</span>
+<span class="del">-             {</span>
+<span class="del">-                 history.Add(new TrackingEvent</span>
+<span class="del">-                 {</span>
+<span class="del">-                     Status = step,</span>
+<span class="del">-                     OccurredUtc = booked.AddMinutes(45 * (int)step),</span>
+<span class="del">-                     Location = step == ConsignmentStatus.Delivered ? delivery : pickup</span>
+<span class="del">-                 });</span>
+<span class="same">          }</span>
+<span class="del">-             Events[number] = history;</span>
+<span class="same">      }</span>
+<span class="same">  </span>
+<span class="add">+     public ConsignmentDetail? GetConsignment(string consignmentNumber)</span>
+<span class="del">-         public BookingResult BookConsignment(BookingRequest request)</span>
+<span class="same">      {</span>
+<span class="add">+         var c = service.Find(consignmentNumber);</span>
+<span class="add">+         return c is null ? null : new ConsignmentDetail</span>
+<span class="del">-             if (request == null) throw Invalid(&quot;request&quot;, &quot;A booking request is required.&quot;);</span>
+<span class="del">-             if (string.IsNullOrWhiteSpace(request.CustomerAccount)) throw Invalid(&quot;CustomerAccount&quot;, &quot;Customer account is required.&quot;);</span>
+<span class="del">-             if (string.IsNullOrWhiteSpace(request.PickupZone)) throw Invalid(&quot;PickupZone&quot;, &quot;Pickup zone is required.&quot;);</span>
+<span class="del">-             if (string.IsNullOrWhiteSpace(request.DeliveryZone)) throw Invalid(&quot;DeliveryZone&quot;, &quot;Delivery zone is required.&quot;);</span>
+<span class="del">-             if (request.WeightKg &lt;= 0 || request.WeightKg &gt; 500) throw Invalid(&quot;WeightKg&quot;, &quot;Weight must be above 0 and at most 500 kg.&quot;);</span>
+<span class="del">-             if (request.Items &lt; 1) throw Invalid(&quot;Items&quot;, &quot;At least one item is required.&quot;);</span>
+<span class="del">- </span>
+<span class="del">-             // Weight is charged per started half kilo. Customers' invoices are built on this rule.</span>
+<span class="del">-             var halfKilos = Math.Ceiling(request.WeightKg * 2);</span>
+<span class="del">-             var charge = 9.50m + halfKilos * 0.80m;</span>
+<span class="del">-             if (request.PickupZone != request.DeliveryZone) charge += 4.00m;</span>
+<span class="del">-             if (request.ServiceLevel == ServiceLevel.Express) charge *= 1.5m;</span>
+<span class="del">-             if (request.ServiceLevel == ServiceLevel.Overnight) charge *= 2m;</span>
+<span class="del">-             charge = Math.Round(charge, 2, MidpointRounding.AwayFromZero);</span>
+<span class="del">- </span>
+<span class="del">-             lock (Sync)</span>
+<span class="same">          {</span>
+<span class="add">+             ConsignmentNumber = c.ConsignmentNumber,</span>
+<span class="add">+             CustomerAccount = c.CustomerAccount,</span>
+<span class="add">+             PickupZone = c.PickupZone,</span>
+<span class="add">+             DeliveryZone = c.DeliveryZone,</span>
+<span class="add">+             ServiceLevel = (ServiceLevel)c.ServiceLevel,</span>
+<span class="add">+             WeightKg = c.WeightKg,</span>
+<span class="add">+             Items = c.Items,</span>
+<span class="add">+             Charge = c.Charge,</span>
+<span class="add">+             Status = (ConsignmentStatus)c.Status,</span>
+<span class="add">+             BookedUtc = c.BookedUtc,</span>
+<span class="add">+             Reference = c.Reference,</span>
+<span class="del">-                 var number = &quot;HF-&quot; + _nextNumber++;</span>
+<span class="del">-                 var now = DateTime.UtcNow;</span>
+<span class="del">-                 Consignments[number] = new ConsignmentDetail</span>
+<span class="del">-                 {</span>
+<span class="del">-                     ConsignmentNumber = number,</span>
+<span class="del">-                     CustomerAccount = request.CustomerAccount,</span>
+<span class="del">-                     PickupZone = request.PickupZone,</span>
+<span class="del">-                     DeliveryZone = request.DeliveryZone,</span>
+<span class="del">-                     ServiceLevel = request.ServiceLevel,</span>
+<span class="del">-                     WeightKg = request.WeightKg,</span>
+<span class="del">-                     Items = request.Items,</span>
+<span class="del">-                     Charge = charge,</span>
+<span class="del">-                     Status = ConsignmentStatus.Booked,</span>
+<span class="del">-                     BookedUtc = now,</span>
+<span class="del">-                     Reference = request.Reference</span>
+<span class="same">          };</span>
+<span class="del">-                 Events[number] = new List&lt;TrackingEvent&gt;</span>
+<span class="del">-                 {</span>
+<span class="del">-                     new TrackingEvent { Status = ConsignmentStatus.Booked, OccurredUtc = now, Location = request.PickupZone }</span>
+<span class="del">-                 };</span>
+<span class="del">-                 return new BookingResult { ConsignmentNumber = number, Charge = charge, Currency = &quot;AUD&quot; };</span>
+<span class="same">      }</span>
+<span class="del">-         }</span>
+<span class="same">  </span>
+<span class="del">-         public ConsignmentDetail GetConsignment(string consignmentNumber)</span>
+<span class="del">-         {</span>
+<span class="del">-             lock (Sync)</span>
+<span class="del">-             {</span>
+<span class="del">-                 ConsignmentDetail detail;</span>
+<span class="del">-                 return consignmentNumber != null &amp;&amp; Consignments.TryGetValue(consignmentNumber, out detail) ? detail : null;</span>
+<span class="del">-             }</span>
+<span class="del">-         }</span>
+<span class="del">- </span>
+<span class="same">      public TrackingEvent[] TrackConsignment(string consignmentNumber)</span>
+<span class="same">      {</span>
+<span class="add">+         var history = service.Track(consignmentNumber) ?? throw new FaultException&lt;ConsignmentNotFoundFault&gt;(</span>
+<span class="del">-             lock (Sync)</span>
+<span class="del">-             {</span>
+<span class="del">-                 List&lt;TrackingEvent&gt; history;</span>
+<span class="del">-                 if (consignmentNumber == null || !Events.TryGetValue(consignmentNumber, out history))</span>
+<span class="del">-                 {</span>
+<span class="del">-                     throw new FaultException&lt;ConsignmentNotFoundFault&gt;(</span>
+<span class="same">              new ConsignmentNotFoundFault { ConsignmentNumber = consignmentNumber },</span>
+<span class="same">              new FaultReason(new FaultReasonText(&quot;Consignment not found.&quot;, &quot;en&quot;)));</span>
+<span class="add">+ </span>
+<span class="add">+         return history</span>
+<span class="add">+             .Select(e =&gt; new TrackingEvent { Status = (ConsignmentStatus)e.Status, OccurredUtc = e.OccurredUtc, Location = e.Location })</span>
+<span class="add">+             .ToArray();</span>
+<span class="same">      }</span>
+<span class="del">-                 return history.ToArray();</span>
+<span class="del">-             }</span>
+<span class="del">-         }</span>
+<span class="same">  </span>
+<span class="add">+     private static FaultException&lt;ValidationFault&gt; Invalid(string field, string problem) =&gt;</span>
+<span class="add">+         new(new ValidationFault { Field = field, Problem = problem }, new FaultReason(new FaultReasonText(problem, &quot;en&quot;)));</span>
+<span class="del">-         private static FaultException&lt;ValidationFault&gt; Invalid(string field, string problem)</span>
+<span class="del">-         {</span>
+<span class="del">-             return new FaultException&lt;ValidationFault&gt;(</span>
+<span class="del">-                 new ValidationFault { Field = field, Problem = problem },</span>
+<span class="del">-                 new FaultReason(new FaultReasonText(problem, &quot;en&quot;)));</span>
+<span class="same">  }</span>
+<span class="del">-     }</span>
+<span class="del">- }</span></pre>
+  </div>
+</section>
+<footer class="foot">All data and names are invented. This is a results site: running the old and new services needs Windows and the .NET 10 SDK, and the steps are in the repo.</footer>
+
+</div>
+<script src="theme.js"></script>
+<script type="module" src="site.js"></script>
+</body>
+</html>

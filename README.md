@@ -4,6 +4,10 @@ A worked migration of a .NET Framework 4.8 WCF service to ASP.NET Core on modern
 
 The code targets .NET 10. The same approach applies to .NET 8 and later.
 
+![The results site: 27 of 27 tests passed, and what each group of tests covers.](docs/results.png)
+
+*The results site, generated from this repo's files. Screenshot taken in headless Chrome on 4 November 2026.*
+
 ## The result
 
 The real compiled .NET Framework client was pointed at the new host by changing one address in its config file. Its output is identical, line for line, to what it printed against the old service.
@@ -55,6 +59,22 @@ modern/src/...Web               CoreWCF SOAP endpoint and REST API, both thin ad
 modern/tests/...Tests           xUnit tests and the golden files in Golden/
 tools/GoldenCapture             records golden files from the running legacy service
 ```
+
+## Live demo
+
+[https://kevindemo.github.io/wcf-to-modern-dotnet-migration/](https://kevindemo.github.io/wcf-to-modern-dotnet-migration/)
+
+A static results site generated from this README, the golden files and the source: test results, the legacy client transcript, the recorded SOAP traffic and code diffs. The build fails if the test table stops adding up to the stated total.
+
+```bash
+node static-demo/build.mjs
+```
+
+This needs only Node and writes `docs-site/`. Every asset path is relative, so it works under `/wcf-to-modern-dotnet-migration/`. GitHub Pages only publishes a repo's root or `docs/`, so this folder goes out through a `gh-pages` branch or an Actions workflow. It has not been deployed yet.
+
+## Hosting the real service
+
+The static demo needs no server. To host the real .NET service as well, the repo has a multi-stage `Dockerfile` (.NET 10, listens on `$PORT`) and a `render.yaml` blueprint for Render's free web service plan. It hosts the modern service only, as the net48 projects cannot build on Linux. This service uses an in-memory store with seeded consignments rather than SQLite, so there is no database to seed. The image itself has not been built, because Docker was not available on the machine where this was written. `dotnet publish` was run instead and the published build answered over HTTP with the same settings.
 
 ## How to run
 
