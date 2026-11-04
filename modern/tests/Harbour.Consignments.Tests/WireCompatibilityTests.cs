@@ -54,6 +54,17 @@ public class WireCompatibilityTests
         Assert.Equal(ContractFacts(expected), ContractFacts(actual));
     }
 
+    [Fact]
+    public async Task Classic_wsdl_address_still_answers()
+    {
+        // Client tooling and old documentation point at ?wsdl rather than ?singleWsdl.
+        await using var app = await RunningApp.StartAsync();
+
+        var wsdl = XDocument.Parse(await app.Http.GetStringAsync(app.SoapAddress + "?wsdl"));
+
+        Assert.Equal("{http://schemas.xmlsoap.org/wsdl/}definitions", wsdl.Root!.Name.ToString());
+    }
+
     [Theory]
     [InlineData("01-book-express-crosszone", "<Charge>28.65</Charge>")]
     [InlineData("08-get-unknown-returns-null", "i:nil=\"true\"")]

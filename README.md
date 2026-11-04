@@ -8,12 +8,12 @@ The code targets .NET 10. The same approach applies to .NET 8 and later.
 
 The real compiled .NET Framework client was pointed at the new host by changing one address in its config file. Its output is identical, line for line, to what it printed against the old service.
 
-Latest run: **26 tests, 26 passed, 0 failed, 0 skipped**, with `dotnet build` at 0 warnings and 0 errors. All of it was run from a fresh clone on Windows 11.
+Latest run: **27 tests, 27 passed, 0 failed, 0 skipped**, with `dotnet build` at 0 warnings and 0 errors. All of it was run from a fresh clone on Windows 11.
 
 | What is tested | How | Tests |
 |---|---|--:|
 | Raw SOAP compatibility | Requests captured from the real net48 service are replayed against CoreWCF, and the response XML is compared with what the old service sent, including faults and nulls | 10 |
-| WSDL compatibility | Operations, SOAP actions, faults and schema types compared with the legacy WSDL | 1 |
+| WSDL compatibility | Operations, SOAP actions, faults and schema types compared with the legacy WSDL, and the classic `?wsdl` address still answers | 2 |
 | The real legacy client | The compiled net48 exe runs against CoreWCF with only the address changed, and its transcript must match | 1 |
 | A System.ServiceModel client | Typed calls and typed faults against the new endpoint | 3 |
 | REST and OpenAPI | Status codes, problem details, tracking, the OpenAPI document | 7 |
