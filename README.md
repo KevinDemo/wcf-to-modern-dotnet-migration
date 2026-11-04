@@ -62,7 +62,7 @@ tools/GoldenCapture             records golden files from the running legacy ser
 
 ## Live demo
 
-[https://kevindemo.github.io/wcf-to-modern-dotnet-migration/](https://kevindemo.github.io/wcf-to-modern-dotnet-migration/)
+[https://demo.oct28th.com/wcf-to-modern-dotnet-migration/](https://demo.oct28th.com/wcf-to-modern-dotnet-migration/)
 
 A static results site generated from this README, the golden files and the source: test results, the legacy client transcript, the recorded SOAP traffic and code diffs. The build fails if the test table stops adding up to the stated total.
 
