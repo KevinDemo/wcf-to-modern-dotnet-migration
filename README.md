@@ -112,4 +112,4 @@ The .NET Framework / WCF to .NET 8 Upgrade starts with a fixed-price assessment,
 3. A proof of concept on one real service if the assessment recommends it: the contract captured as golden tests and hosted on modern .NET.
 4. For the implementation, the same safety net as this repo, so existing clients are tested against recorded behaviour rather than assumptions.
 
-Details and contact: [kevindemo.github.io](https://oct28th.com).
+Details and contact: [oct28th.com](https://oct28th.com).
