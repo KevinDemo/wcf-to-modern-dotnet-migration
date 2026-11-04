@@ -1,0 +1,1 @@
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><TrackConsignment xmlns="http://harbourfreight.example/consignments/2014/06"><consignmentNumber>HF-999999</consignmentNumber></TrackConsignment></s:Body></s:Envelope>

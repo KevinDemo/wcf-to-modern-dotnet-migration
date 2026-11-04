@@ -1,0 +1,11 @@
+Book: HF-100004 charge=28.65 AUD
+Get HF-100004: account=AC2001 Z03->Z08 Express 3.2kg items=2 charge=28.65 status=Booked booked=(just now) kind=Utc ref=PO-1234
+Get HF-100001: account=AC1001 Z01->Z01 Standard 2.0kg items=1 charge=12.70 status=Delivered booked=2025-03-03T08:15:00.0000000Z kind=Utc ref=PO-7781
+Get HF-100002: account=AC1002 Z02->Z07 Express 11.5kg items=3 charge=47.85 status=Despatched booked=2025-03-04T09:30:00.0000000Z kind=Utc ref=(none)
+Get HF-999999: null
+Track HF-100001: Booked at 2025-03-03T08:15:00.0000000Z in Z01
+Track HF-100001: Despatched at 2025-03-03T09:00:00.0000000Z in Z01
+Track HF-100001: PickedUp at 2025-03-03T09:45:00.0000000Z in Z01
+Track HF-100001: Delivered at 2025-03-03T10:30:00.0000000Z in Z01
+Track HF-999999: fault number=HF-999999 reason=Consignment not found.
+Invalid booking: fault field=WeightKg problem=Weight must be above 0 and at most 500 kg. reason=Weight must be above 0 and at most 500 kg.

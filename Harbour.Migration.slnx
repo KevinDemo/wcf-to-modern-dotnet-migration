@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/legacy/">
+    <Project Path="legacy/Harbour.Legacy.Client/Harbour.Legacy.Client.csproj" />
+    <Project Path="legacy/Harbour.Legacy.Service/Harbour.Legacy.Service.csproj" />
+  </Folder>
+  <Folder Name="/modern/" />
+  <Folder Name="/modern/src/">
+    <Project Path="modern/src/Harbour.Consignments.Application/Harbour.Consignments.Application.csproj" />
+    <Project Path="modern/src/Harbour.Consignments.Web/Harbour.Consignments.Web.csproj" />
+  </Folder>
+  <Folder Name="/modern/tests/">
+    <Project Path="modern/tests/Harbour.Consignments.Tests/Harbour.Consignments.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/GoldenCapture/GoldenCapture.csproj" />
+  </Folder>
+</Solution>

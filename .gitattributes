@@ -1,0 +1,4 @@
+* text=auto
+*.sh text eol=lf
+# Golden files are the frozen record of what the legacy service sent, so git must not touch them.
+modern/tests/Harbour.Consignments.Tests/Golden/** -text
